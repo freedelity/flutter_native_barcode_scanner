@@ -1,0 +1,26 @@
+name: native_barcode_scanner
+description: Flutter barcode scanner plugin
+version: 1.0.0
+repository: https://github.com/freedelity/flutter_native_barcode_scanner
+
+environment:
+  sdk: ">=2.17.0 <4.0.0"
+  flutter: ">=3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^1.0.0
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: be.freedelity.barcode_scanner
+        pluginClass: BarcodeScannerPlugin
+      ios:
+        pluginClass: BarcodeScannerPlugin
