@@ -8,12 +8,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:native_barcode_scanner/barcode_scanner.dart';
 
-
 void main() async {
-
-
   runZonedGuarded(() async {
-
     DartPluginRegistrant.ensureInitialized();
     WidgetsFlutterBinding.ensureInitialized();
 
@@ -30,7 +26,13 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-enum CameraActions {flipCamera, toggleFlashlight, stopScanner, startScanner, setOverlay }
+enum CameraActions {
+  flipCamera,
+  toggleFlashlight,
+  stopScanner,
+  startScanner,
+  setOverlay
+}
 
 class _MyAppState extends State<MyApp> {
   bool withOverlay = true;
@@ -42,7 +44,6 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-
     return MaterialApp(
         home: Scaffold(
             appBar: AppBar(
@@ -68,7 +69,8 @@ class _MyAppState extends State<MyApp> {
                           break;
                       }
                     },
-                    itemBuilder: (BuildContext context) => <PopupMenuEntry<CameraActions>>[
+                    itemBuilder: (BuildContext context) =>
+                        <PopupMenuEntry<CameraActions>>[
                       const PopupMenuItem<CameraActions>(
                         value: CameraActions.flipCamera,
                         child: Text('Flip camera'),
@@ -87,17 +89,18 @@ class _MyAppState extends State<MyApp> {
                       ),
                       PopupMenuItem<CameraActions>(
                         value: CameraActions.setOverlay,
-                        child: Text('${withOverlay ? 'Remove' : 'Add'} overlay'),
+                        child:
+                            Text('${withOverlay ? 'Remove' : 'Add'} overlay'),
                       ),
                     ],
                   ),
-                ]
-            ),
-            body: Builder(
-                builder: (builderContext) {
-                  Widget child = BarcodeScannerWidget(
-                    onBarcodeDetected: (barcode) async {
-                      await showDialog(context: builderContext, builder: (dialogContext) {
+                ]),
+            body: Builder(builder: (builderContext) {
+              Widget child = BarcodeScannerWidget(
+                onBarcodeDetected: (barcode) async {
+                  await showDialog(
+                      context: builderContext,
+                      builder: (dialogContext) {
                         return Align(
                             alignment: Alignment.center,
                             child: Card(
@@ -107,75 +110,57 @@ class _MyAppState extends State<MyApp> {
                                     child: Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
+                                          Text('barcode : ${barcode.value}'),
                                           Text(
-                                              'barcode : ${barcode.value}'
-                                          ),
-                                          Text(
-                                              'format : ${barcode.format.name}'
-                                          ),
-                                          ElevatedButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close dialog'))
-                                        ]
-                                    )
-                                )
-                            )
-                        );
+                                              'format : ${barcode.format.name}'),
+                                          ElevatedButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(dialogContext),
+                                              child: const Text('Close dialog'))
+                                        ]))));
                       });
-                    },
-                    onError: (dynamic error) {
-                      debugPrint('$error');
-                    },
-                  );
+                },
+                onError: (dynamic error) {
+                  debugPrint('$error');
+                },
+              );
 
-                  if (withOverlay) {
-                    return buildWithOverlay(builderContext, child);
-                  }
+              if (withOverlay) {
+                return buildWithOverlay(builderContext, child);
+              }
 
-                  return child;
-                }
-            )
-        )
-    );
+              return child;
+            })));
   }
 
   buildWithOverlay(BuildContext builderContext, Widget scannerWidget) {
-    return Stack(
-        children: [
-          Positioned.fill(child: scannerWidget),
-          Align(
-              alignment: Alignment.center,
-              child: Divider(
-                  color: Colors.red[400],
-                  thickness: 0.8
-              )
-          ),
-          Center(
-              child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 64),
-                  width: double.infinity,
-                  height: 200,
-                  decoration: BoxDecoration(
-                      border: Border.all(color: Colors.white, width: 2),
-                      borderRadius: BorderRadius.circular(15)
-                  )
-              )
-          ),
-          Positioned(
-              top: 16,
-              right: 16,
-              child: ElevatedButton(
-                  child: const Icon(Icons.refresh, size: 32),
-                  style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(Colors.purple),
-                      foregroundColor: MaterialStateProperty.all(Colors.white),
-                      shape: MaterialStateProperty.all(const CircleBorder()),
-                      padding: MaterialStateProperty.all(const EdgeInsets.all(8))
-                  ),
-                  onPressed: () {
-                    ScaffoldMessenger.of(builderContext).showSnackBar(const SnackBar(content: Text('Icon button pressed')));
-                  }
-              )
-          ),
-        ]
-    );
+    return Stack(children: [
+      Positioned.fill(child: scannerWidget),
+      Align(
+          alignment: Alignment.center,
+          child: Divider(color: Colors.red[400], thickness: 0.8)),
+      Center(
+          child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 64),
+              width: double.infinity,
+              height: 200,
+              decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white, width: 2),
+                  borderRadius: BorderRadius.circular(15)))),
+      Positioned(
+          top: 16,
+          right: 16,
+          child: ElevatedButton(
+              child: const Icon(Icons.refresh, size: 32),
+              style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(Colors.purple),
+                  foregroundColor: MaterialStateProperty.all(Colors.white),
+                  shape: MaterialStateProperty.all(const CircleBorder()),
+                  padding: MaterialStateProperty.all(const EdgeInsets.all(8))),
+              onPressed: () {
+                ScaffoldMessenger.of(builderContext).showSnackBar(
+                    const SnackBar(content: Text('Icon button pressed')));
+              })),
+    ]);
   }
 }
