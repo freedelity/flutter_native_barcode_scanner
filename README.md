@@ -1,6 +1,18 @@
 # native_barcode_scanner
 
-A flutter plugin to scan barcodes using the device camera.
+A fast flutter plugin to scan barcodes and QR codes using the device camera.
+
+This plugin offers good performance compared to other plugins by minimizing the amount of data that is transferred between the Dart VM and the native side.
+
+Most of the operations are actually done in the native side by using native SDK for barcode recognition and using [`PlatformView`](https://docs.flutter.dev/platform-integration/android/platform-views) to show the camera stream.
+
+Barcode recognition is based on these SDK:
+- [Google ML Kit Vision](https://developers.google.com/ml-kit/vision/barcode-scanning) on Android
+- [Capture subsystem of AVFoundation](https://developer.apple.com/documentation/avfoundation/capture_setup) on iOS
+
+The `PlatformView` allows to avoid transferring every video frame to let the plugin client display it inside a classical Flutter view.
+Using PlatformView has a performance trade-off compared to Flutter views but having to copy every frames through platform channels is much more costly.
+Even for devices with an older version than Android 10 (where `PlatformViews` induced a bigger performance penalty), using `PlatformView` gives better performance than other plugins exchanging image stream across platform channels.
 
 ## Platform Support
 
