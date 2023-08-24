@@ -41,10 +41,10 @@ class BarcodeScannerWidget extends StatefulWidget {
       : super(key: key);
 
   @override
-  BarcodeScannerWidgetState createState() => BarcodeScannerWidgetState();
+  State<BarcodeScannerWidget> createState() => _BarcodeScannerWidgetState();
 }
 
-class BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
+class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
   static const String platformViewChannel = 'be.freedelity/native_scanner/view';
   static const EventChannel eventChannel =
       EventChannel('be.freedelity/native_scanner/imageStream');
