@@ -61,7 +61,7 @@ class Barcode {
 /// This provides static methods to alter how the barcode scanning process.
 abstract class BarcodeScanner {
   static const MethodChannel _channel =
-      MethodChannel('be.freedelity/scanner/method');
+      MethodChannel('be.freedelity/native_scanner/method');
 
   /// This allows to toggle the flashlight.
   static Future toggleFlashlight() => _channel.invokeMethod('toggleTorch');

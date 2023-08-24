@@ -96,6 +96,7 @@ class _MyAppState extends State<MyApp> {
                   ),
                 ]),
             body: Builder(builder: (builderContext) {
+
               Widget child = BarcodeScannerWidget(
                 onBarcodeDetected: (barcode) async {
                   await showDialog(
@@ -151,7 +152,6 @@ class _MyAppState extends State<MyApp> {
           top: 16,
           right: 16,
           child: ElevatedButton(
-              child: const Icon(Icons.refresh, size: 32),
               style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all(Colors.purple),
                   foregroundColor: MaterialStateProperty.all(Colors.white),
@@ -160,7 +160,9 @@ class _MyAppState extends State<MyApp> {
               onPressed: () {
                 ScaffoldMessenger.of(builderContext).showSnackBar(
                     const SnackBar(content: Text('Icon button pressed')));
-              })),
+              },
+              child: const Icon(Icons.refresh, size: 32)
+              )),
     ]);
   }
 }
