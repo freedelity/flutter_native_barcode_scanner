@@ -1,7 +1,7 @@
 import Flutter
 import UIKit
 
-public class BarcodeScannerPluginSwift: NSObject, FlutterPlugin {
+public class BarcodeScannerPlugin: NSObject, FlutterPlugin {
     
     private var cameraController: BarcodeScannerController
     
@@ -13,15 +13,15 @@ public class BarcodeScannerPluginSwift: NSObject, FlutterPlugin {
         
         let viewController = (UIApplication.shared.delegate?.window??.rootViewController)!
         let cameraController = BarcodeScannerController()
+        let instance = BarcodeScannerPlugin(cameraController: cameraController)
         let factory = BarcodeScannerViewFactory(mainUIController: viewController, cameraController: cameraController)
-        let instance = BarcodeScannerPluginSwift(cameraController: cameraController)
+
+        registrar.register(factory, withId: "be.freedelity/native_scanner/view")
         
-        registrar.register(factory, withId: "be.freedelity/scanner/view")
-        
-        let channel = FlutterMethodChannel(name: "be.freedelity/scanner/method", binaryMessenger: registrar.messenger())
+        let channel = FlutterMethodChannel(name: "be.freedelity/native_scanner/method", binaryMessenger: registrar.messenger())
         registrar.addMethodCallDelegate(instance, channel: channel)
         
-        let eventChannel = FlutterEventChannel(name: "be.freedelity/scanner/imageStream", binaryMessenger: registrar.messenger())
+        let eventChannel = FlutterEventChannel(name: "be.freedelity/native_scanner/imageStream", binaryMessenger: registrar.messenger())
         eventChannel.setStreamHandler(cameraController)
     }
     

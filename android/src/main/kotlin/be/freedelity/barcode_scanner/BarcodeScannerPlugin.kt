@@ -12,9 +12,9 @@ import io.flutter.plugin.common.MethodChannel
 
 class BarcodeScannerPlugin: FlutterPlugin, ActivityAware {
 
-  private val platformViewChannel = "be.freedelity/scanner/view"
-  private val methodChannel = "be.freedelity/scanner/method"
-  private val scanEventChannel = "be.freedelity/scanner/imageStream";
+  private val platformViewChannel = "be.freedelity/native_scanner/view"
+  private val methodChannel = "be.freedelity/native_scanner/method"
+  private val scanEventChannel = "be.freedelity/native_scanner/imageStream";
 
   private var barcodeScannerController: BarcodeScannerController? = null
   private lateinit var activity: Activity
