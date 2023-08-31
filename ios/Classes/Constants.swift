@@ -16,7 +16,6 @@ struct BarcodeFormats {
     static let EAN_8: Int = 3
     static let EAN_13: Int = 4
     static let ITF: Int = 5
-    static let CODABAR: Int = 6
     static let DATAMATRIX: Int = 7
     static let QR_CODE: Int = 8
     static let UPC_E: Int = 10

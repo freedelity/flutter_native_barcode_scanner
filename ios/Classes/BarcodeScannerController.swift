@@ -11,7 +11,6 @@ class BarcodeScannerController: UIViewController, AVCaptureMetadataOutputObjects
                                       AVMetadataObject.ObjectType.ean8,
                                       AVMetadataObject.ObjectType.ean13,
                                       AVMetadataObject.ObjectType.itf14,
-                                      AVMetadataObject.ObjectType.codabar,
                                       AVMetadataObject.ObjectType.dataMatrix,
                                       AVMetadataObject.ObjectType.qr,
                                       AVMetadataObject.ObjectType.upce]
@@ -68,7 +67,7 @@ class BarcodeScannerController: UIViewController, AVCaptureMetadataOutputObjects
             let deviceDiscoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInWideAngleCamera], mediaType: AVMediaType.video, position: .back)
             // Get the back-facing camera for capturing videos
             guard let captureDevice = deviceDiscoverySession.devices.first else {
-                barcodeStream?(FlutterError(code: "native_scanner_failed", message: "Failed to get the camera device", details: nil)
+                barcodeStream?(FlutterError(code: "native_scanner_failed", message: "Failed to get the camera device", details: nil))
                 return
             }
             
@@ -113,7 +112,7 @@ class BarcodeScannerController: UIViewController, AVCaptureMetadataOutputObjects
 
         // Check if the metadataObjects array is not nil and it contains at least one object.
         if metadataObjects.count == 0 {
-            barcodeStream?(FlutterError(code: "native_scanner_failed", message: "metadataObjects array is nil or doesn't contains any object", details: nil)
+            barcodeStream?(FlutterError(code: "native_scanner_failed", message: "metadataObjects array is nil or doesn't contains any object", details: nil))
             return
         }
 
@@ -124,7 +123,7 @@ class BarcodeScannerController: UIViewController, AVCaptureMetadataOutputObjects
                 barcodeStream?(["barcode": metadataObj.stringValue!, "format": convertBarcodeType(type: metadataObj.type)])
             }
         } else {
-            barcodeStream?(FlutterError(code: "native_scanner_failed", message: "unsupported barcode type", details: "barcode type : \(metadataObj.type)")
+            barcodeStream?(FlutterError(code: "native_scanner_failed", message: "unsupported barcode type", details: "barcode type : \(metadataObj.type)"))
             barcodeStream?(["barcode": "", "format": -1])
         }
     }
