@@ -62,6 +62,7 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
     }
 
     override fun onCancel(arguments: Any?) {
+        eventSink?.endOfStream()
         eventSink = null
     }
 
@@ -159,7 +160,7 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
                 configureAutofocus()
 
             } catch(exc: Exception) {
-                Log.e("FREEDELITY", "Use case binding failed", exc)
+                eventSink?.error("native_scanner_failed", "Camera binding failed", exc.message.orEmpty())
             }
 
         }, ContextCompat.getMainExecutor(context))
@@ -168,15 +169,17 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
     private fun startScanner() {
         isScannerActive = true
         val options = BarcodeScannerOptions.Builder().setBarcodeFormats(
-            Barcode.FORMAT_CODE_39,
-            Barcode.FORMAT_CODE_93,
-            Barcode.FORMAT_CODE_128,
-            Barcode.FORMAT_EAN_8,
-            Barcode.FORMAT_EAN_13,
-            Barcode.FORMAT_ITF,
-            Barcode.FORMAT_CODABAR,
-            Barcode.FORMAT_DATA_MATRIX,
-            Barcode.FORMAT_QR_CODE
+                Barcode.FORMAT_CODE_39,
+                Barcode.FORMAT_CODE_93,
+                Barcode.FORMAT_CODE_128,
+                Barcode.FORMAT_EAN_8,
+                Barcode.FORMAT_EAN_13,
+                Barcode.FORMAT_ITF,
+                Barcode.FORMAT_CODABAR,
+                Barcode.FORMAT_DATA_MATRIX,
+                Barcode.FORMAT_UPC_A,
+                Barcode.FORMAT_UPC_E,
+                Barcode.FORMAT_QR_CODE
         ).build()
         val scanner = BarcodeScanning.getClient(options)
         imageAnalysis.setAnalyzer(cameraExecutor) { imageProxy ->
@@ -241,6 +244,8 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
             Barcode.FORMAT_CODABAR -> BarcodeFormats.CODABAR
             Barcode.FORMAT_DATA_MATRIX -> BarcodeFormats.DATAMATRIX
             Barcode.FORMAT_QR_CODE -> BarcodeFormats.QR_CODE
+            Barcode.FORMAT_UPC_A -> BarcodeFormats.UPCA_A
+            Barcode.FORMAT_UPC_E -> BarcodeFormats.UPC_E
             else -> -1
         }
     }
@@ -255,18 +260,18 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
                     if (barcode != null) {
                         scanSucceedTimestamp = System.currentTimeMillis()
                         eventSink?.success(mapOf(
-                            "barcode" to barcode.displayValue,
-                            "format" to convertBarcodeType(barcode.format)
+                                "barcode" to barcode.displayValue,
+                                "format" to convertBarcodeType(barcode.format)
                         ))
                     }
                 }
-                .addOnFailureListener {
-                    Log.e("FREEDELITY", it.message.orEmpty())
-                }
-                .addOnCompleteListener {
-                    imageProxy.image?.close()
-                    imageProxy.close()
-                }
+                        .addOnFailureListener {
+                            eventSink?.error("native_scanner_failed", "An error occurs while process image proxy", it.message.orEmpty())
+                        }
+                        .addOnCompleteListener {
+                            imageProxy.image?.close()
+                            imageProxy.close()
+                        }
             } else {
                 imageProxy.image?.close()
                 imageProxy.close()
