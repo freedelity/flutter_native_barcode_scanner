@@ -28,6 +28,7 @@
 .packages
 build/
 
+/example/pubspec.lock
 /android/local.properties
 /android/.gradle/
 /android/gradlew
