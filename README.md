@@ -30,7 +30,7 @@ Even for devices with an older version than Android 10 (where `PlatformViews` in
 |   EAN-8    |    ✅    |   ✅    |
 |   EAN-13   |    ✅    |   ✅    |
 |    ITF     |    ✅    |   ✅    |
-|  Codabar   |    ✅    |   ✅    |
+|  Codabar   |    ✅    |   ❌    |
 | DataMatrix |    ✅    |   ✅    |
 |   QRCode   |    ✅    |   ✅    |
 |   UPC-A    |    ✅    |   ❌    |

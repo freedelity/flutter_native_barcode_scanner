@@ -1,3 +1,7 @@
+## 1.0.4
+
+- Quick fix : iOS build failure
+
 ## 1.0.3
 
 - Bug fix : BarcodeScanner onError callback is never called
