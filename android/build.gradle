@@ -2,6 +2,9 @@ group 'be.freedelity.barcode_scanner'
 version '1.0-SNAPSHOT'
 
 buildscript {
+
+    ext.kotlin_version = '1.6.10'
+
     repositories {
         google()
         mavenCentral()

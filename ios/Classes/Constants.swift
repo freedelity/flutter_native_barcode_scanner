@@ -19,4 +19,5 @@ struct BarcodeFormats {
     static let CODABAR: Int = 6
     static let DATAMATRIX: Int = 7
     static let QR_CODE: Int = 8
+    static let UPC_E: Int = 10
 }

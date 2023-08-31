@@ -20,6 +20,22 @@ Even for devices with an older version than Android 10 (where `PlatformViews` in
 | :-----: | :-----: |
 |   ✅    |   ✅    |
 
+## Barcode format Supported
+
+|   Format   | Android |  iOS    |
+|:----------:|:-------:| :-----: |
+|  CODE-39   |    ✅    |   ✅    |
+|  CODE-93   |    ✅    |   ✅    |
+|  CODE-128  |    ✅    |   ✅    |
+|   EAN-8    |    ✅    |   ✅    |
+|   EAN-13   |    ✅    |   ✅    |
+|    ITF     |    ✅    |   ✅    |
+|  Codabar   |    ✅    |   ✅    |
+| DataMatrix |    ✅    |   ✅    |
+|   QRCode   |    ✅    |   ✅    |
+|   UPC-A    |    ✅    |   ❌    |
+|   UPC-E    |    ✅    |   ✅    |
+
 ## Getting Started
 
 Add this to your package's `pubspec.yaml` file:

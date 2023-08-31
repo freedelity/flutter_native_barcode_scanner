@@ -19,4 +19,6 @@ object BarcodeFormats {
     const val CODABAR : Int = 6;
     const val DATAMATRIX : Int = 7;
     const val QR_CODE : Int = 8;
+    const val UPCA_A : Int = 9;
+    const val UPC_E : Int = 10;
 }

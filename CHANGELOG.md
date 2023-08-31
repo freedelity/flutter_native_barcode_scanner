@@ -1,3 +1,10 @@
+## 1.0.3
+
+- Bug fix : BarcodeScanner onError callback is never called
+- Bug fix : iOS missing Codabar format
+- Support format upca/upce for Android
+- Support format upce for iOS (upca is not available)
+
 ## 1.0.2
 
 - Bug fix : update iOS .podspec file
