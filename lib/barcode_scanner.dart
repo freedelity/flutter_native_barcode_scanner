@@ -18,7 +18,9 @@ enum BarcodeFormat {
   itf,
   codabar,
   dataMatrix,
-  qrCode;
+  qrCode,
+  upca,
+  upce;
 
   /// @nodoc
   static BarcodeFormat? unserialize(int constant) {
@@ -41,6 +43,10 @@ enum BarcodeFormat {
         return BarcodeFormat.dataMatrix;
       case _formatQrCode:
         return BarcodeFormat.qrCode;
+      case _formatUpca:
+        return BarcodeFormat.upca;
+      case _formatUpce:
+        return BarcodeFormat.upce;
       default:
         return null;
     }
@@ -91,3 +97,5 @@ const int _formatItf = 5;
 const int _formatCodabar = 6;
 const int _formatDataMatrix = 7;
 const int _formatQrCode = 8;
+const int _formatUpca = 9;
+const int _formatUpce = 10;
