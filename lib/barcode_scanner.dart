@@ -87,10 +87,6 @@ abstract class BarcodeScanner {
 
   /// Start the scanning process. It is useful in case `BarcodeScanner.stopScanner` has been called before or if `BarcodeScannerWidget` has been created with `startScanning` set to `false`.
   static Future startScanner() => _channel.invokeMethod('startScanner');
-
-  /// Set set the camera preview orientation.
-  static Future changeOrientation(CameraOrientation orientation) => _channel
-      .invokeMethod('changeOrientation', {'orientation': orientation.name});
 }
 
 // Constants for serializing barcode formats in event channel
