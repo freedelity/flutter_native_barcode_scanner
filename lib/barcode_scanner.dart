@@ -64,6 +64,13 @@ class Barcode {
   Barcode({required this.format, required this.value});
 }
 
+/// iOS camera orientation must be specified if the orientation is other than portrait.
+/// Android camera orientation is automatically taken from system
+enum CameraOrientation { portrait, landscapeLeft, landscapeRight }
+
+/// Defines if the camera is at the front or the back of the device
+enum CameraSelector { front, back }
+
 /// This provides static methods to alter how the barcode scanning process.
 abstract class BarcodeScanner {
   static const MethodChannel _channel =
@@ -80,6 +87,10 @@ abstract class BarcodeScanner {
 
   /// Start the scanning process. It is useful in case `BarcodeScanner.stopScanner` has been called before or if `BarcodeScannerWidget` has been created with `startScanning` set to `false`.
   static Future startScanner() => _channel.invokeMethod('startScanner');
+
+  /// Set set the camera preview orientation.
+  static Future changeOrientation(CameraOrientation orientation) => _channel
+      .invokeMethod('changeOrientation', {'orientation': orientation.name});
 }
 
 // Constants for serializing barcode formats in event channel

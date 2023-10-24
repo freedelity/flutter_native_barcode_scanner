@@ -10,7 +10,7 @@ public class BarcodeScannerPlugin: NSObject, FlutterPlugin {
     }
     
     public static func register(with registrar: FlutterPluginRegistrar) {
-        
+
         let viewController = (UIApplication.shared.delegate?.window??.rootViewController)!
         let cameraController = BarcodeScannerController()
         let instance = BarcodeScannerPlugin(cameraController: cameraController)

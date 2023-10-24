@@ -20,6 +20,18 @@ class BarcodeScannerController: UIViewController, AVCaptureMetadataOutputObjects
     private var videoPreviewLayer: AVCaptureVideoPreviewLayer?
     private let captureSession = AVCaptureSession()
     private let captureMetadataOutput = AVCaptureMetadataOutput()
+
+    private var orientation: String?
+    private var selector: String?
+
+    public func setOrientation(orientation: String) {
+        self.orientation = orientation
+    }
+
+    public func setSelector(selector: String) {
+        self.selector = selector
+    }
+
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -54,6 +66,10 @@ class BarcodeScannerController: UIViewController, AVCaptureMetadataOutputObjects
         case "flipCamera":
             switchCamera()
             result(nil)
+        case "orientation":
+            let args = call.arguments as? Dictionary<String, Any>
+            print(args)
+            //changeOrientation()
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -88,7 +104,16 @@ class BarcodeScannerController: UIViewController, AVCaptureMetadataOutputObjects
             
             videoPreviewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
             videoPreviewLayer?.videoGravity = .resizeAspectFill
-            videoPreviewLayer?.connection?.videoOrientation = .portrait
+            if (self.orientation == "portrait" || self.orientation == nil) {
+                print("############################ portrait mode")
+                videoPreviewLayer?.connection?.videoOrientation = .portrait
+            } else if (self.orientation == "landscapeLeft") {
+                print("############################ landscapeLeft mode")
+                videoPreviewLayer?.connection?.videoOrientation = .landscapeLeft
+            } else if (self.orientation == "landscapeRight") {
+                print("############################ landscapeRight mode")
+                videoPreviewLayer?.connection?.videoOrientation = .landscapeRight
+            }
             
             view.contentMode = UIView.ContentMode.scaleAspectFill
             view.layer.addSublayer(videoPreviewLayer!)
@@ -199,6 +224,24 @@ class BarcodeScannerController: UIViewController, AVCaptureMetadataOutputObjects
     }
     
     private func switchCamera() {
+        // Get the current active input.
+        guard let currentInput = captureSession.inputs.first as? AVCaptureDeviceInput else { return }
+        let newPosition = getInversePosition(position: currentInput.device.position);
+        guard let device = getCaptureDeviceByPosition(position: newPosition) else { return }
+        do {
+            let newInput = try AVCaptureDeviceInput(device: device)
+            // Replace current input with the new one.
+            captureSession.removeInput(currentInput)
+            captureSession.addInput(newInput)
+            // Disable flash by default
+            setFlashStatus(device: device, mode: .off)
+        } catch let error {
+            print(error)
+            return
+        }
+    }
+
+    private func changeOrientation(orientation: String) {
         // Get the current active input.
         guard let currentInput = captureSession.inputs.first as? AVCaptureDeviceInput else { return }
         let newPosition = getInversePosition(position: currentInput.device.position);

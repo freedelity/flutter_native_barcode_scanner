@@ -1,3 +1,7 @@
+## 1.0.5
+
+- Bug fix : iOS landscape view clipped since iOS 16
+
 ## 1.0.4
 
 - Quick fix : iOS build failure

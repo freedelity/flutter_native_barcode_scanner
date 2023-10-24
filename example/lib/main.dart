@@ -96,7 +96,6 @@ class _MyAppState extends State<MyApp> {
                   ),
                 ]),
             body: Builder(builder: (builderContext) {
-
               Widget child = BarcodeScannerWidget(
                 onBarcodeDetected: (barcode) async {
                   await showDialog(
@@ -161,8 +160,7 @@ class _MyAppState extends State<MyApp> {
                 ScaffoldMessenger.of(builderContext).showSnackBar(
                     const SnackBar(content: Text('Icon button pressed')));
               },
-              child: const Icon(Icons.refresh, size: 32)
-              )),
+              child: const Icon(Icons.refresh, size: 32))),
     ]);
   }
 }
