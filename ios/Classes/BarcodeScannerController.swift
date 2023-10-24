@@ -68,10 +68,6 @@ class BarcodeScannerController: UIViewController, AVCaptureMetadataOutputObjects
         case "flipCamera":
             switchCamera()
             result(nil)
-        case "orientation":
-            //let args = call.arguments as? Dictionary<String, Any>?
-            //changeOrientation(orientation: args["orientation"] as? String?)
-            result(nil)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -240,24 +236,6 @@ class BarcodeScannerController: UIViewController, AVCaptureMetadataOutputObjects
         }
     }
 
-    private func changeOrientation(orientation: String) {
-        // Get the current active input.
-        guard let currentInput = captureSession.inputs.first as? AVCaptureDeviceInput else { return }
-        let newPosition = getInversePosition(position: currentInput.device.position);
-        guard let device = getCaptureDeviceByPosition(position: newPosition) else { return }
-        do {
-            let newInput = try AVCaptureDeviceInput(device: device)
-            // Replace current input with the new one.
-            captureSession.removeInput(currentInput)
-            captureSession.addInput(newInput)
-            // Disable flash by default
-            setFlashStatus(device: device, mode: .off)
-        } catch let error {
-            print(error)
-            return
-        }
-    }
-    
     private func getCaptureDeviceFromCurrentSession(session: AVCaptureSession) -> AVCaptureDevice? {
         // Get the current active input.
         guard let currentInput = captureSession.inputs.first as? AVCaptureDeviceInput else { return nil }
