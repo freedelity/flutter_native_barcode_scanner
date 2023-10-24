@@ -97,6 +97,7 @@ class _MyAppState extends State<MyApp> {
                 ]),
             body: Builder(builder: (builderContext) {
               Widget child = BarcodeScannerWidget(
+                // orientation: CameraOrientation.landscapeRight,
                 onBarcodeDetected: (barcode) async {
                   await showDialog(
                       context: builderContext,

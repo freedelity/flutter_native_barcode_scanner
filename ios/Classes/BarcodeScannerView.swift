@@ -20,8 +20,12 @@ class BarcodeScannerView: NSObject, FlutterPlatformView  {
         self.cameraController = cameraController
 
         if let argumentsDictionary = args as? Dictionary<String, Any> {
-            cameraController.setOrientation(orientation: argumentsDictionary["orientation"] as? String)
-            cameraController.setSelector(selector: argumentsDictionary["camera_selector"] as? String)
+            if let orientation = argumentsDictionary["orientation"] as? String {
+                cameraController.setOrientation(orientation: orientation)
+            }
+            if let selector = argumentsDictionary["camera_selector"] as? String {
+                cameraController.setSelector(selector: selector)
+            }
         } 
         
         super.init()

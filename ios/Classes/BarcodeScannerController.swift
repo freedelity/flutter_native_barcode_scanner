@@ -21,8 +21,10 @@ class BarcodeScannerController: UIViewController, AVCaptureMetadataOutputObjects
     private let captureSession = AVCaptureSession()
     private let captureMetadataOutput = AVCaptureMetadataOutput()
 
-    private var orientation: String?
-    private var selector: String?
+    private var orientation: String = "portrait"
+    private var selector: String = "back"
+
+    public func getCurrentPosition() {}
 
     public func setOrientation(orientation: String) {
         self.orientation = orientation
@@ -67,9 +69,9 @@ class BarcodeScannerController: UIViewController, AVCaptureMetadataOutputObjects
             switchCamera()
             result(nil)
         case "orientation":
-            let args = call.arguments as? Dictionary<String, Any>
-            print(args)
-            //changeOrientation()
+            //let args = call.arguments as? Dictionary<String, Any>?
+            //changeOrientation(orientation: args["orientation"] as? String?)
+            result(nil)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -105,13 +107,10 @@ class BarcodeScannerController: UIViewController, AVCaptureMetadataOutputObjects
             videoPreviewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
             videoPreviewLayer?.videoGravity = .resizeAspectFill
             if (self.orientation == "portrait" || self.orientation == nil) {
-                print("############################ portrait mode")
                 videoPreviewLayer?.connection?.videoOrientation = .portrait
             } else if (self.orientation == "landscapeLeft") {
-                print("############################ landscapeLeft mode")
                 videoPreviewLayer?.connection?.videoOrientation = .landscapeLeft
             } else if (self.orientation == "landscapeRight") {
-                print("############################ landscapeRight mode")
                 videoPreviewLayer?.connection?.videoOrientation = .landscapeRight
             }
             
