@@ -20,6 +20,20 @@ class BarcodeScannerController: UIViewController, AVCaptureMetadataOutputObjects
     private var videoPreviewLayer: AVCaptureVideoPreviewLayer?
     private let captureSession = AVCaptureSession()
     private let captureMetadataOutput = AVCaptureMetadataOutput()
+
+    private var orientation: String = "portrait"
+    private var selector: String = "back"
+
+    public func getCurrentPosition() {}
+
+    public func setOrientation(orientation: String) {
+        self.orientation = orientation
+    }
+
+    public func setSelector(selector: String) {
+        self.selector = selector
+    }
+
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -88,7 +102,13 @@ class BarcodeScannerController: UIViewController, AVCaptureMetadataOutputObjects
             
             videoPreviewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
             videoPreviewLayer?.videoGravity = .resizeAspectFill
-            videoPreviewLayer?.connection?.videoOrientation = .portrait
+            if (self.orientation == "portrait" || self.orientation == nil) {
+                videoPreviewLayer?.connection?.videoOrientation = .portrait
+            } else if (self.orientation == "landscapeLeft") {
+                videoPreviewLayer?.connection?.videoOrientation = .landscapeLeft
+            } else if (self.orientation == "landscapeRight") {
+                videoPreviewLayer?.connection?.videoOrientation = .landscapeRight
+            }
             
             view.contentMode = UIView.ContentMode.scaleAspectFill
             view.layer.addSublayer(videoPreviewLayer!)
@@ -215,7 +235,7 @@ class BarcodeScannerController: UIViewController, AVCaptureMetadataOutputObjects
             return
         }
     }
-    
+
     private func getCaptureDeviceFromCurrentSession(session: AVCaptureSession) -> AVCaptureDevice? {
         // Get the current active input.
         guard let currentInput = captureSession.inputs.first as? AVCaptureDeviceInput else { return nil }

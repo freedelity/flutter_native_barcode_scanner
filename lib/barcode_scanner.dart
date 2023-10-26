@@ -64,6 +64,13 @@ class Barcode {
   Barcode({required this.format, required this.value});
 }
 
+/// iOS camera orientation must be specified if the orientation is other than portrait.
+/// Android camera orientation is automatically taken from system
+enum CameraOrientation { portrait, landscapeLeft, landscapeRight }
+
+/// Defines if the camera is at the front or the back of the device
+enum CameraSelector { front, back }
+
 /// This provides static methods to alter how the barcode scanning process.
 abstract class BarcodeScanner {
   static const MethodChannel _channel =

@@ -26,4 +26,8 @@ class BarcodeScannerViewFactory: NSObject, FlutterPlatformViewFactory {
             cameraController: cameraController,
             mainUIController: mainUIController)
     }
+    
+    public func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
+      return FlutterStandardMessageCodec.sharedInstance()
+}
 }

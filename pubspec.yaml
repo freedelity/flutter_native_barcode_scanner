@@ -1,6 +1,6 @@
 name: native_barcode_scanner
 description: Fast barcode/QR scanner plugin using PlatformView and processing on native side
-version: 1.0.4
+version: 1.0.5
 repository: https://github.com/freedelity/flutter_native_barcode_scanner
 
 environment:

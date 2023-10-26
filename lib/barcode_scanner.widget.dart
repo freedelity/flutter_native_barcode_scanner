@@ -12,19 +12,19 @@ import 'package:flutter/services.dart';
 
 import 'barcode_scanner.dart';
 
-/// Defines if the camera is at the front or the back of the device
-enum CameraSelector { front, back }
-
 /// Widget displaying the camera stream while scanning barcodes.
 class BarcodeScannerWidget extends StatefulWidget {
   /// Select which camera should be used when creating the widget.
-  final CameraSelector? cameraSelector;
+  final CameraSelector cameraSelector;
 
   /// Indicates if the barcode scanning process should start when creating the widget.
   final bool startScanning;
 
   /// Indicates if barcode scanning should stop after a barcode is detected. If `false`, `onBarcodeDetected` may be triggered multiple times for the same barcode.
   final bool stopScanOnBarcodeDetected;
+
+  /// The orientation of the camera. Default set as Prortait
+  final CameraOrientation orientation;
 
   /// This function will be called when a barcode is detected.
   final Function(Barcode barcode) onBarcodeDetected;
@@ -33,9 +33,10 @@ class BarcodeScannerWidget extends StatefulWidget {
 
   const BarcodeScannerWidget(
       {Key? key,
-      this.cameraSelector,
+      this.cameraSelector = CameraSelector.back,
       this.startScanning = true,
       this.stopScanOnBarcodeDetected = true,
+      this.orientation = CameraOrientation.portrait,
       required this.onBarcodeDetected,
       required this.onError})
       : super(key: key);
@@ -56,7 +57,8 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
     super.initState();
 
     creationParams = {
-      'camera_selector': widget.cameraSelector?.name,
+      'orientation': widget.orientation.name,
+      'camera_selector': widget.cameraSelector.name,
       'start_scanning': widget.startScanning
     };
 
