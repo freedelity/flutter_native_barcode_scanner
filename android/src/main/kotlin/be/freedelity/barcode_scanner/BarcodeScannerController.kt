@@ -3,9 +3,11 @@
 // found in the LICENSE file.
 package be.freedelity.barcode_scanner
 
+import BarcodeFormats
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.graphics.Rect
 import android.hardware.camera2.CameraAccessException
 import android.util.Log
 import android.view.View
@@ -20,6 +22,12 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.Text
+import com.google.mlkit.vision.text.Text.Line
+import com.google.mlkit.vision.text.Text.TextBlock
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.TextRecognizer
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
@@ -34,7 +42,7 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
     private var scanStreamChannel: EventChannel = EventChannel(messenger, scanEventChannelName)
     private var eventSink: EventChannel.EventSink? = null
 
-    private lateinit var cameraExecutor: ExecutorService
+    private lateinit var executor: ExecutorService
     private lateinit var previewView: PreviewView
     private lateinit var context: Context
 
@@ -47,6 +55,7 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
     private var torchEnabled: Boolean = false
 
     private var scanSucceedTimestamp: Long = System.currentTimeMillis()
+    private var mrzResult: MutableList<String>? = null
 
     init {
         methodChannel.setMethodCallHandler(this)
@@ -129,7 +138,7 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
         if (viewContext != null)
             context = viewContext
         if (viewCameraExecutor != null)
-            cameraExecutor = viewCameraExecutor
+            executor = viewCameraExecutor
 
         cameraParams = params
 
@@ -168,7 +177,19 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
 
     private fun startScanner() {
         isScannerActive = true
-        val options = BarcodeScannerOptions.Builder().setBarcodeFormats(
+
+        var barcodeScanner: BarcodeScanner? = null
+        var textRecognizer: TextRecognizer? = null
+
+        if (cameraParams?.get("scanner_type") == "mrz" || cameraParams?.get("scanner_type") == "text") {
+            Log.i("native_scanner", "Start for MRZ scanner")
+            textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+            if (cameraParams?.get("scanner_type") == "mrz") {
+                mrzResult = mutableListOf()
+            }
+        } else {
+            Log.i("native_scanner", "Start for barcode scanner")
+            val options = BarcodeScannerOptions.Builder().setBarcodeFormats(
                 Barcode.FORMAT_CODE_39,
                 Barcode.FORMAT_CODE_93,
                 Barcode.FORMAT_CODE_128,
@@ -180,10 +201,12 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
                 Barcode.FORMAT_UPC_A,
                 Barcode.FORMAT_UPC_E,
                 Barcode.FORMAT_QR_CODE
-        ).build()
-        val scanner = BarcodeScanning.getClient(options)
-        imageAnalysis.setAnalyzer(cameraExecutor) { imageProxy ->
-            processImageProxy(scanner, imageProxy)
+            ).build()
+            barcodeScanner = BarcodeScanning.getClient(options)
+        }
+
+        imageAnalysis.setAnalyzer(executor) { imageProxy ->
+            processImageProxy(imageProxy, barcodeScanner, textRecognizer)
         }
     }
 
@@ -202,18 +225,23 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
             val xCenter = previewView.width / 2f
             val autofocusPoint = factory.createPoint(xCenter, yCenter, .01f)
             try {
-                val autofocusAction = FocusMeteringAction.Builder(autofocusPoint ).apply {
+                val autofocusAction = FocusMeteringAction.Builder(autofocusPoint).apply {
                     setAutoCancelDuration(300, TimeUnit.MILLISECONDS)
-                    addPoint(factory.createPoint(xCenter - 9f, yCenter, .01f))
-                    addPoint(factory.createPoint(xCenter - 6f, yCenter, .01f))
-                    addPoint(factory.createPoint(xCenter - 3f, yCenter, .01f))
-                    addPoint(factory.createPoint(xCenter + 3f, yCenter, .01f))
-                    addPoint(factory.createPoint(xCenter + 6f, yCenter, .01f))
-                    addPoint(factory.createPoint(xCenter + 9f, yCenter, .01f))
+                    if (cameraParams?.get("scanner_type") == "barcode") {
+                        addPoint(factory.createPoint(xCenter - 9f, yCenter, .01f))
+                        addPoint(factory.createPoint(xCenter - 6f, yCenter, .01f))
+                        addPoint(factory.createPoint(xCenter - 3f, yCenter, .01f))
+                        addPoint(factory.createPoint(xCenter + 3f, yCenter, .01f))
+                        addPoint(factory.createPoint(xCenter + 6f, yCenter, .01f))
+                        addPoint(factory.createPoint(xCenter + 9f, yCenter, .01f))
+                    } else {
+                        addPoint(factory.createPoint(0f, yCenter, .01f))
+                        addPoint(factory.createPoint(previewView.width / 1f, yCenter, .01f))
+                    }
                 }.build()
                 camera!!.cameraControl.startFocusAndMetering(autofocusAction)
             } catch( e: CameraInfoUnavailableException) {
-                Log.e("FREEDELITY", "cannot access camera", e)
+                Log.e("native_scanner", "cannot access camera", e)
             }
         }
     }
@@ -250,32 +278,188 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
         }
     }
 
-    @SuppressLint("UnsafeOptInUsageError")
-    private fun processImageProxy(barcodeScanner: BarcodeScanner, imageProxy: ImageProxy) {
-        imageProxy.image?.let { image ->
-            if (System.currentTimeMillis() > (scanSucceedTimestamp + 2000)) {
-                val inputImage = InputImage.fromMediaImage(image, imageProxy.imageInfo.rotationDegrees)
-                barcodeScanner.process(inputImage).addOnSuccessListener { barcodeList ->
-                    val barcode: Barcode? = barcodeList.getOrNull(0)
-                    if (barcode != null) {
-                        scanSucceedTimestamp = System.currentTimeMillis()
-                        eventSink?.success(mapOf(
-                                "barcode" to barcode.displayValue,
-                                "format" to convertBarcodeType(barcode.format)
-                        ))
+    // There is three types of MRZ format (src Wikipedia : Machine-readable passport)
+    // "Type 3" is typical of passport booklets. The MRZ consists of 2 lines × 44 characters.
+    // "Type 2" is relatively rare with 2 lines × 36 characters.
+    // "Type 1" is of a credit card-size with 3 lines × 30 characters.
+    // Belgian eID is Type 1
+    private fun extractMRZ(textBlocks: List<TextBlock>): String? {
+
+        textBlocks.forEach { textBlock ->
+
+            val mrzLength = textBlock.lines.last().text.length
+            val mrzLines: List<Line> = textBlock.lines.takeLastWhile { it.text.length == mrzLength }
+
+            mrzLines.forEach { line ->
+
+                val text = line.text.replace("«", "<").replace(" ", "").uppercase().trim()
+
+                if (((mrzResult!!.size < 3 && text.length == 30) || mrzResult!!.size < 2 && (text.length == 36 || text.length == 44))) {
+
+                    if (!mrzResult!!.any { res -> res.substring(0, 20) == text.substring(0, 20) } && (mrzResult!!.isEmpty() || mrzResult!!.first().length == text.length)) {
+
+                        mrzResult!!.add(text)
+
+                        if (mrzResult!!.size == 3 && !mrzResult!!.any{ it[0].isDigit() && it[1].isDigit() }) {
+                            mrzResult!!.clear()
+                        }
+
+                    } else if (mrzResult!!.any { res -> res.substring(0, 20) == text.substring(0, 20) && res.length != text.length }) {
+
+                        mrzResult!!.clear()
+
                     }
                 }
-                        .addOnFailureListener {
-                            eventSink?.error("native_scanner_failed", "An error occurs while process image proxy", it.message.orEmpty())
+            }
+        }
+
+        if ((mrzResult!!.size == 3 && mrzResult!!.first().length == 30) ||
+            (mrzResult!!.size == 2 && (mrzResult!!.first().length == 44 || mrzResult!!.first().length == 36))) {
+
+            val map = mutableMapOf<Int, String>()
+
+            mrzResult!!.forEach {
+
+                Log.i("native_scanner_res", "result : $mrzResult")
+
+                val startWithDigit = it[0].isDigit() && it[1].isDigit()
+
+                if ((mrzResult!!.size < 3 && !startWithDigit) || it.startsWith("IDBEL")) {
+                    map[0] = it
+                } else if (mrzResult!!.size < 3 || startWithDigit) {
+                    map[1] = it
+                } else if (mrzResult!!.size == 3) {
+                    map[2] = it
+                }
+
+            }
+
+            var result = "${map[0]}\n${map[1]}"
+            if (mrzResult!!.size == 3) result += "\n${map[2]}"
+            return result
+        }
+
+        return null
+    }
+
+    private fun getScannerProcessInterval(): Int {
+        return if (cameraParams?.get("scanner_type") == "mrz") {
+            100
+        } else if (cameraParams?.get("scanner_type") == "text") {
+            500
+        } else {
+            2000
+        }
+    }
+
+    @SuppressLint("UnsafeOptInUsageError")
+    private fun processImageProxy(imageProxy: ImageProxy, barcodeScanner: BarcodeScanner?, textRecognizer: TextRecognizer?) {
+
+        assert(barcodeScanner != null || textRecognizer != null)
+
+        val mediaImage = imageProxy.image ?: return
+
+        if (System.currentTimeMillis() > (scanSucceedTimestamp + getScannerProcessInterval())) {
+
+            val inputImage = if (cameraParams?.get("scanner_type") == "mrz") {
+                val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+
+                val imageHeight = mediaImage.height
+                val imageWidth = mediaImage.width
+
+                val convertImageToBitmap = BarcodeScannerUtil.convertYuv420888ImageToBitmap(mediaImage)
+                val cropRect = Rect(0, 0, imageWidth, imageHeight)
+
+                val heightCropPercent = 60
+                val widthCropPercent = 1
+                val (widthCrop, heightCrop) = when (rotationDegrees) {
+                    90, 270 -> Pair(heightCropPercent / 100f, widthCropPercent / 100f)
+                    else -> Pair(widthCropPercent / 100f, heightCropPercent / 100f)
+                }
+
+                cropRect.inset(
+                    (imageWidth * widthCrop / 2).toInt(),
+                    (imageHeight * heightCrop / 2).toInt()
+                )
+                val croppedBitmap = BarcodeScannerUtil.rotateAndCrop(convertImageToBitmap, rotationDegrees, cropRect)
+
+                InputImage.fromBitmap(croppedBitmap, 0)
+            } else {
+                InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+            }
+
+            if (barcodeScanner != null) {
+
+                barcodeScanner.process(inputImage)
+                    .addOnSuccessListener { barcodeList ->
+
+                        val barcode: Barcode? = barcodeList.getOrNull(0)
+
+                        if (barcode != null) {
+                            scanSucceedTimestamp = System.currentTimeMillis()
+                            eventSink?.success(mapOf(
+                                "barcode" to barcode.displayValue,
+                                "format" to convertBarcodeType(barcode.format)
+                            ))
                         }
-                        .addOnCompleteListener {
-                            imageProxy.image?.close()
-                            imageProxy.close()
+
+                    }
+                    .addOnFailureListener {
+                        eventSink?.error("native_scanner_failed", "An error occurs while process image proxy for barcode scanner", it.message.orEmpty())
+                    }
+                    .addOnCompleteListener {
+                        imageProxy.image?.close()
+                        imageProxy.close()
+                    }
+
+            } else if (textRecognizer != null) {
+
+                textRecognizer.process(inputImage)
+                    .addOnSuccessListener { visionText: Text ->
+
+                        if (visionText.textBlocks.isNotEmpty()) {
+
+                            scanSucceedTimestamp = System.currentTimeMillis()
+
+                            if (cameraParams?.get("scanner_type") == "mrz") {
+
+                                val mrz: String? = extractMRZ(visionText.textBlocks)
+                                if (mrz != null) {
+
+                                    eventSink?.success(mapOf(
+                                        "mrz" to mrz,
+                                    ))
+
+                                    mrzResult!!.clear()
+                                    imageProxy.image?.close()
+                                    imageProxy.close()
+                                }
+
+                            } else {
+
+                                eventSink?.success(mapOf(
+                                    "text" to visionText.textBlocks.joinToString("\n")
+                                ))
+
+                            }
                         }
+                    }
+                    .addOnFailureListener {
+                        eventSink?.error("native_scanner_failed", "An error occurs while process image proxy for text recognizer", it.message.orEmpty())
+                    }
+                    .addOnCompleteListener {
+                        imageProxy.image?.close()
+                        imageProxy.close()
+                    }
+
             } else {
                 imageProxy.image?.close()
                 imageProxy.close()
             }
+
+        } else {
+            imageProxy.image?.close()
+            imageProxy.close()
         }
     }
 }

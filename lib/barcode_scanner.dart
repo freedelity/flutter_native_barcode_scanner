@@ -68,6 +68,9 @@ class Barcode {
 /// Android camera orientation is automatically taken from system
 enum CameraOrientation { portrait, landscapeLeft, landscapeRight }
 
+/// Defines the type of scanned data
+enum ScannerType { barcode, text, mrz }
+
 /// Defines if the camera is at the front or the back of the device
 enum CameraSelector { front, back }
 
