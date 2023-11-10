@@ -48,10 +48,6 @@ object MrzUtil {
 
                 if (text.matches("^[A-Z0-9<]*$".toRegex())) {
 
-                    if (text.matches("^\\d{7}[A-Z<]\\d{7}[A-Z<]{3}[A-Z\\d<]{11}\\d\$".toRegex())) {
-                        Log.i("native_scanner", "#################################### DID IT !!!!! $text")
-                    }
-
                     if (((mrzResult.size < 3 && text.length == 30) || mrzResult.size < 2 && (text.length == 36 || text.length == 44))) {
 
                         if (!mrzResult.any { res -> res.substring(0, 20) == text.substring(0, 20) } && (mrzResult.isEmpty() || mrzResult.first().length == text.length)) {
@@ -78,17 +74,17 @@ object MrzUtil {
             val map = mutableMapOf<Int, String>()
             val missed = mutableListOf<Int>()
 
-            mrzResult.forEachIndexed{ index, it ->
+            Log.i("native_scanner_res", "result : $mrzResult")
 
-                Log.i("native_scanner_res", "result : $mrzResult")
+            mrzResult.forEachIndexed{ index, it ->
 
                 if (mrzResult.size == 3) {
 
-                    if (it.matches(T1_TD1_FIRST.toRegex())) {
+                    if (it.matches(T1_TD1_FIRST.toRegex()) && !map.containsKey(0)) {
                         map[0] = it
-                    } else if (it.matches(T1_TD1_SECOND.toRegex())) {
+                    } else if (it.matches(T1_TD1_SECOND.toRegex()) && !map.containsKey(1)) {
                         map[1] = it
-                    } else if (it.matches(T1_TD1_THIRD.toRegex())) {
+                    } else if (it.matches(T1_TD1_THIRD.toRegex()) && !map.containsKey(2)) {
                         map[2] = it
                     } else {
                         missed.add(index)
