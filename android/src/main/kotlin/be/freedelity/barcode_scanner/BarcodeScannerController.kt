@@ -17,6 +17,8 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import be.freedelity.barcode_scanner.util.BarcodeScannerUtil
+import be.freedelity.barcode_scanner.util.MrzUtil
 import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
@@ -278,70 +280,6 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
         }
     }
 
-    // There is three types of MRZ format (src Wikipedia : Machine-readable passport)
-    // "Type 3" is typical of passport booklets. The MRZ consists of 2 lines × 44 characters.
-    // "Type 2" is relatively rare with 2 lines × 36 characters.
-    // "Type 1" is of a credit card-size with 3 lines × 30 characters.
-    // Belgian eID is Type 1
-    private fun extractMRZ(textBlocks: List<TextBlock>): String? {
-
-        textBlocks.forEach { textBlock ->
-
-            val mrzLength = textBlock.lines.last().text.length
-            val mrzLines: List<Line> = textBlock.lines.takeLastWhile { it.text.length == mrzLength }
-
-            mrzLines.forEach { line ->
-
-                val text = line.text.replace("«", "<").replace(" ", "").uppercase().trim()
-
-                if (((mrzResult!!.size < 3 && text.length == 30) || mrzResult!!.size < 2 && (text.length == 36 || text.length == 44))) {
-
-                    if (!mrzResult!!.any { res -> res.substring(0, 20) == text.substring(0, 20) } && (mrzResult!!.isEmpty() || mrzResult!!.first().length == text.length)) {
-
-                        mrzResult!!.add(text)
-
-                        if (mrzResult!!.size == 3 && !mrzResult!!.any{ it[0].isDigit() && it[1].isDigit() }) {
-                            mrzResult!!.clear()
-                        }
-
-                    } else if (mrzResult!!.any { res -> res.substring(0, 20) == text.substring(0, 20) && res.length != text.length }) {
-
-                        mrzResult!!.clear()
-
-                    }
-                }
-            }
-        }
-
-        if ((mrzResult!!.size == 3 && mrzResult!!.first().length == 30) ||
-            (mrzResult!!.size == 2 && (mrzResult!!.first().length == 44 || mrzResult!!.first().length == 36))) {
-
-            val map = mutableMapOf<Int, String>()
-
-            mrzResult!!.forEach {
-
-                Log.i("native_scanner_res", "result : $mrzResult")
-
-                val startWithDigit = it[0].isDigit() && it[1].isDigit()
-
-                if ((mrzResult!!.size < 3 && !startWithDigit) || it.startsWith("IDBEL")) {
-                    map[0] = it
-                } else if (mrzResult!!.size < 3 || startWithDigit) {
-                    map[1] = it
-                } else if (mrzResult!!.size == 3) {
-                    map[2] = it
-                }
-
-            }
-
-            var result = "${map[0]}\n${map[1]}"
-            if (mrzResult!!.size == 3) result += "\n${map[2]}"
-            return result
-        }
-
-        return null
-    }
-
     private fun getScannerProcessInterval(): Int {
         return if (cameraParams?.get("scanner_type") == "mrz") {
             100
@@ -423,7 +361,7 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
 
                             if (cameraParams?.get("scanner_type") == "mrz") {
 
-                                val mrz: String? = extractMRZ(visionText.textBlocks)
+                                val mrz: String? = MrzUtil.extractMRZ(visionText.textBlocks, mrzResult!!)
                                 if (mrz != null) {
 
                                     eventSink?.success(mapOf(

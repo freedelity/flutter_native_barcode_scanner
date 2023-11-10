@@ -1,4 +1,4 @@
-package be.freedelity.barcode_scanner
+package be.freedelity.barcode_scanner.util
 
 import android.graphics.Bitmap
 import android.graphics.ImageFormat
