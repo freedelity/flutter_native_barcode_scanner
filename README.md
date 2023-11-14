@@ -1,6 +1,6 @@
 # native_barcode_scanner
 
-A fast flutter plugin to scan barcodes and QR codes using the device camera.
+A fast flutter plugin to scan barcodes and QR codes using the device camera. This plugin also supports text and MRZ recognition from the camera.
 
 This plugin offers good performance compared to other plugins by minimizing the amount of data that is transferred between the Dart VM and the native side.
 
@@ -16,9 +16,13 @@ Even for devices with an older version than Android 10 (where `PlatformViews` in
 
 ## Platform Support
 
-| Android |  iOS    |
-| :-----: | :-----: |
-|   ✅    |   ✅    |
+|             | Android |  iOS    |
+|:-----------:|:-------:| :-----: |
+| Barcode (*) |    ✅    |   ✅    |
+|    Text     |    ✅    |   ❌    |
+|     MRZ     |    ✅    |   ❌    |
+
+*(\*) Support for specific barcodes is specified below*
 
 ## Barcode format Supported
 
@@ -35,14 +39,6 @@ Even for devices with an older version than Android 10 (where `PlatformViews` in
 |   QRCode   |    ✅    |   ✅    |
 |   UPC-A    |    ✅    |   ❌    |
 |   UPC-E    |    ✅    |   ✅    |
-
-## MRZ scanner
-
-A **machine-readable passport (MRP)** is a machine-readable travel document (MRTD) with the data on the identity page encoded in optical character recognition format.
-Most travel passports worldwide are **MRPs**. They are standardized by the ICAO Document 9303 and have a special **machine-readable zone (MRZ)**, which is usually at the bottom of the identity page at the beginning of a passport
-
-> [!NOTE]
-> **Android only** ! An iOS implementation is not scheduled for the moment
 
 ## Getting Started
 

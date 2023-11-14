@@ -1,4 +1,4 @@
-*
+/*
 * Copyright 2023 Freedelity. All rights reserved.
 *
 * This file is based on ImageUtils.kt

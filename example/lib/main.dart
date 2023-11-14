@@ -97,7 +97,7 @@ class _MyAppState extends State<MyApp> {
                 ]),
             body: Builder(builder: (builderContext) {
               Widget child = BarcodeScannerWidget(
-                scannerType: ScannerType.mrz,
+                scannerType: ScannerType.barcode,
                 onBarcodeDetected: (barcode) async {
                   await showDialog(
                       context: builderContext,
