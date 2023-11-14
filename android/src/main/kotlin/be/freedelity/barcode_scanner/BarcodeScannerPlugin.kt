@@ -4,7 +4,6 @@
 package be.freedelity.barcode_scanner
 
 import android.app.Activity
-import androidx.annotation.NonNull
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -14,7 +13,7 @@ class BarcodeScannerPlugin: FlutterPlugin, ActivityAware {
 
   private val platformViewChannel = "be.freedelity/native_scanner/view"
   private val methodChannel = "be.freedelity/native_scanner/method"
-  private val scanEventChannel = "be.freedelity/native_scanner/imageStream";
+  private val scanEventChannel = "be.freedelity/native_scanner/imageStream"
 
   private var barcodeScannerController: BarcodeScannerController? = null
   private lateinit var activity: Activity
@@ -22,14 +21,14 @@ class BarcodeScannerPlugin: FlutterPlugin, ActivityAware {
 
   private lateinit var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
 
-  override fun onAttachedToEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+  override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     method = MethodChannel(binding.binaryMessenger, methodChannel)
     method.setMethodCallHandler(barcodeScannerController)
 
-    flutterPluginBinding = binding;
+    flutterPluginBinding = binding
   }
 
-  override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+  override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     method.setMethodCallHandler(null)
   }
 

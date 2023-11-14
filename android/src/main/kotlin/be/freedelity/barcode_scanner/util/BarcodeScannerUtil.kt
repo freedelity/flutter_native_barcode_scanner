@@ -11,7 +11,7 @@ object BarcodeScannerUtil {
 
     private val CHANNEL_RANGE = 0 until (1 shl 18)
 
-    fun convertYuv420888ImageToBitmap(image: Image): Bitmap {
+    fun convertToBitmap(image: Image): Bitmap {
         require(image.format == ImageFormat.YUV_420_888) {
             "Unsupported image format $(image.format)"
         }

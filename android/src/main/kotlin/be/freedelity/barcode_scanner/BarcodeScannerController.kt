@@ -25,8 +25,6 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
-import com.google.mlkit.vision.text.Text.Line
-import com.google.mlkit.vision.text.Text.TextBlock
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.TextRecognizer
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
@@ -305,7 +303,7 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
                 val imageHeight = mediaImage.height
                 val imageWidth = mediaImage.width
 
-                val convertImageToBitmap = BarcodeScannerUtil.convertYuv420888ImageToBitmap(mediaImage)
+                val convertImageToBitmap = BarcodeScannerUtil.convertToBitmap(mediaImage)
                 val cropRect = Rect(0, 0, imageWidth, imageHeight)
 
                 val heightCropPercent = 60
