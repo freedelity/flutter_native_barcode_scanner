@@ -26,20 +26,28 @@ class BarcodeScannerWidget extends StatefulWidget {
   /// The orientation of the camera. Default set as Prortait
   final CameraOrientation orientation;
 
+  /// The type of scanner which should decode the image and scan data
+  final ScannerType scannerType;
+
   /// This function will be called when a barcode is detected.
-  final Function(Barcode barcode) onBarcodeDetected;
+  final Function(Barcode barcode)? onBarcodeDetected;
+
+  /// This function will be called when a bloc of text or a MRZ is detected.
+  final Function(String textResult)? onTextDetected;
 
   final Function(dynamic error) onError;
 
   const BarcodeScannerWidget(
       {Key? key,
-      this.cameraSelector = CameraSelector.back,
-      this.startScanning = true,
-      this.stopScanOnBarcodeDetected = true,
-      this.orientation = CameraOrientation.portrait,
-      required this.onBarcodeDetected,
-      required this.onError})
-      : super(key: key);
+        this.cameraSelector = CameraSelector.back,
+        this.startScanning = true,
+        this.stopScanOnBarcodeDetected = true,
+        this.orientation = CameraOrientation.portrait,
+        this.scannerType = ScannerType.barcode,
+        this.onBarcodeDetected,
+        this.onTextDetected,
+        required this.onError})
+      : assert(onBarcodeDetected != null || onTextDetected != null), super(key: key);
 
   @override
   State<BarcodeScannerWidget> createState() => _BarcodeScannerWidgetState();
@@ -48,7 +56,7 @@ class BarcodeScannerWidget extends StatefulWidget {
 class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
   static const String platformViewChannel = 'be.freedelity/native_scanner/view';
   static const EventChannel eventChannel =
-      EventChannel('be.freedelity/native_scanner/imageStream');
+  EventChannel('be.freedelity/native_scanner/imageStream');
 
   late Map<String, dynamic> creationParams;
 
@@ -58,20 +66,29 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
 
     creationParams = {
       'orientation': widget.orientation.name,
+      'scanner_type': widget.scannerType.name,
       'camera_selector': widget.cameraSelector.name,
-      'start_scanning': widget.startScanning
+      'start_scanning': widget.startScanning,
     };
 
     eventChannel.receiveBroadcastStream().listen((dynamic event) async {
-      final format = BarcodeFormat.unserialize(event['format']);
-      if (format != null) {
-        await BarcodeScanner.stopScanner();
+      if (widget.onBarcodeDetected != null && widget.scannerType == ScannerType.barcode) {
+        final format = BarcodeFormat.unserialize(event['format']);
+        if (format != null) {
+          await BarcodeScanner.stopScanner();
 
-        await widget.onBarcodeDetected(
-            Barcode(format: format, value: event['barcode'] as String));
+          await widget.onBarcodeDetected!(Barcode(format: format, value: event['barcode'] as String));
 
-        if (!widget.stopScanOnBarcodeDetected) {
-          BarcodeScanner.startScanner();
+          if (!widget.stopScanOnBarcodeDetected) {
+            BarcodeScanner.startScanner();
+          }
+        }
+      } else if (widget.onTextDetected != null && widget.scannerType != ScannerType.barcode) {
+        if (widget.scannerType == ScannerType.mrz) {
+          await BarcodeScanner.stopScanner();
+          await widget.onTextDetected!(event['mrz'] as String);
+        } else {
+          await widget.onTextDetected!(event['text'] as String);
         }
       }
     }, onError: (dynamic error) {

@@ -1,3 +1,7 @@
+## 1.0.6
+
+- Support MRZ Scanner for Android
+
 ## 1.0.5
 
 - Bug fix : iOS landscape view clipped since iOS 16

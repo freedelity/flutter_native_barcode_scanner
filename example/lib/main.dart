@@ -70,7 +70,7 @@ class _MyAppState extends State<MyApp> {
                       }
                     },
                     itemBuilder: (BuildContext context) =>
-                        <PopupMenuEntry<CameraActions>>[
+                    <PopupMenuEntry<CameraActions>>[
                       const PopupMenuItem<CameraActions>(
                         value: CameraActions.flipCamera,
                         child: Text('Flip camera'),
@@ -90,14 +90,14 @@ class _MyAppState extends State<MyApp> {
                       PopupMenuItem<CameraActions>(
                         value: CameraActions.setOverlay,
                         child:
-                            Text('${withOverlay ? 'Remove' : 'Add'} overlay'),
+                        Text('${withOverlay ? 'Remove' : 'Add'} overlay'),
                       ),
                     ],
                   ),
                 ]),
             body: Builder(builder: (builderContext) {
               Widget child = BarcodeScannerWidget(
-                // orientation: CameraOrientation.landscapeRight,
+                scannerType: ScannerType.barcode,
                 onBarcodeDetected: (barcode) async {
                   await showDialog(
                       context: builderContext,
@@ -112,8 +112,28 @@ class _MyAppState extends State<MyApp> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text('barcode : ${barcode.value}'),
-                                          Text(
-                                              'format : ${barcode.format.name}'),
+                                          Text('format : ${barcode.format.name}'),
+                                          ElevatedButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(dialogContext),
+                                              child: const Text('Close dialog'))
+                                        ]))));
+                      });
+                },
+                onTextDetected: (String text) async {
+                  await showDialog(
+                      context: builderContext,
+                      builder: (dialogContext) {
+                        return Align(
+                            alignment: Alignment.center,
+                            child: Card(
+                                margin: const EdgeInsets.all(24),
+                                child: Container(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text('text : \n$text'),
                                           ElevatedButton(
                                               onPressed: () =>
                                                   Navigator.pop(dialogContext),
