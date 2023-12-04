@@ -1,3 +1,7 @@
+## 1.0.7
+
+- Android : Upgrade AGP 8
+
 ## 1.0.6
 
 - Support MRZ Scanner for Android
