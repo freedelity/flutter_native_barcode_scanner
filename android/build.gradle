@@ -3,7 +3,7 @@ version '1.0-SNAPSHOT'
 
 buildscript {
 
-    ext.kotlin_version = '1.6.10'
+    ext.kotlin_version = '1.7.22'
 
     repositories {
         google()
@@ -11,7 +11,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.0'
+        classpath 'com.android.tools.build:gradle:8.1.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -27,7 +27,10 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdk 31
+
+    namespace = "be.freedelity.barcode_scanner"
+
+    compileSdkVersion 34
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
@@ -35,6 +38,7 @@ android {
 
     defaultConfig {
         minSdkVersion 21
+        targetSdkVersion 34
     }
 
     buildTypes {
