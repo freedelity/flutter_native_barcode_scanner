@@ -1,3 +1,7 @@
+## 1.0.8
+
+- Bug fix : the iOS default permission request never start the camera even when agreed
+
 ## 1.0.7
 
 - Android : Upgrade AGP 8

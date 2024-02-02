@@ -32,16 +32,13 @@ class BarcodeScannerView: NSObject, FlutterPlatformView  {
     }
     
     func view() -> UIView {
-        if checkCameraAvailability(){
-            if checkForCameraPermission() {
-                return cameraController.view
-            } else {
-                var view = UIView()
+        if checkCameraAvailability() {
+
+            if !checkForCameraPermission() {
+
                 AVCaptureDevice.requestAccess(for: .video) {
                     success in DispatchQueue.main.sync {
-                        if success {
-                            view = self.cameraController.view
-                        } else {
+                        if !success {
                             let alert = UIAlertController(title: "Action needed", message: "Please grant camera permission to use barcode scanner", preferredStyle: .alert)
                             
                             alert.addAction(UIAlertAction(title: "Grant", style: .default, handler: { action in
@@ -54,14 +51,17 @@ class BarcodeScannerView: NSObject, FlutterPlatformView  {
                         }
                     }
                 }
-                return view
+                
             }
+
+            return cameraController.view
+
         } else {
             showAlertDialog(title: "Unable to proceed", message: "Camera not available")
             return UIView()
         }
     }
-    
+
     /// Check for camera availability
     func checkCameraAvailability()->Bool{
         return UIImagePickerController.isSourceTypeAvailable(.camera)
