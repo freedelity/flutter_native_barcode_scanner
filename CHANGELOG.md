@@ -1,3 +1,7 @@
+## Next release
+
+- Bug fix: barcode event could be sent after the widget has been detached from the widget tree.
+
 ## 1.0.8
 
 - Bug fix : the iOS default permission request never start the camera even when agreed

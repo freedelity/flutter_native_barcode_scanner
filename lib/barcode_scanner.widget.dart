@@ -1,7 +1,7 @@
 // Copyright 2023 Freedelity. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -59,6 +59,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
   EventChannel('be.freedelity/native_scanner/imageStream');
 
   late Map<String, dynamic> creationParams;
+  late StreamSubscription eventSubscription;
 
   @override
   void initState() {
@@ -71,7 +72,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
       'start_scanning': widget.startScanning,
     };
 
-    eventChannel.receiveBroadcastStream().listen((dynamic event) async {
+    eventSubscription = eventChannel.receiveBroadcastStream().listen((dynamic event) async {
       if (widget.onBarcodeDetected != null && widget.scannerType == ScannerType.barcode) {
         final format = BarcodeFormat.unserialize(event['format']);
         if (format != null) {
@@ -94,6 +95,12 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
     }, onError: (dynamic error) {
       widget.onError(error);
     });
+  }
+
+  @override
+  void dispose() {
+    eventSubscription.cancel();
+    super.dispose();
   }
 
   @override
