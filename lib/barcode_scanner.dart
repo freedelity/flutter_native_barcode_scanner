@@ -90,6 +90,9 @@ abstract class BarcodeScanner {
 
   /// Start the scanning process. It is useful in case `BarcodeScanner.stopScanner` has been called before or if `BarcodeScannerWidget` has been created with `startScanning` set to `false`.
   static Future startScanner() => _channel.invokeMethod('startScanner');
+
+  /// Close Android camera manually.
+  static Future closeCamera() => _channel.invokeMethod('closeCamera');
 }
 
 // Constants for serializing barcode formats in event channel

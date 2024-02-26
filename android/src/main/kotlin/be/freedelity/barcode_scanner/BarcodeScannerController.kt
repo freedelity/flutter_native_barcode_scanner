@@ -125,6 +125,16 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
                         handleException(e, result)
                     }
                 }
+                "closeCamera" -> {
+                    try {
+                        val cameraProvider = ProcessCameraProvider.getInstance(context).get()
+                        cameraProvider.unbindAll()
+
+                        result.success(null)
+                    } catch (e: Exception) {
+                        handleException(e, result)
+                    }
+                }
                 else -> result.notImplemented()
             }
 
