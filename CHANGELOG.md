@@ -1,6 +1,7 @@
-## Next release
+## 1.0.9
 
-- Bug fix: barcode event could be sent after the widget has been detached from the widget tree.
+- Bug fix : Android camera already in use after close, preventing its use on other screens
+- Bug fix : barcode event could be sent after the widget has been detached from the widget tree.
 
 ## 1.0.8
 
