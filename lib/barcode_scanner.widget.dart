@@ -100,6 +100,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
   @override
   void dispose() {
     eventSubscription.cancel();
+    BarcodeScanner.closeCamera();
     super.dispose();
   }
 
