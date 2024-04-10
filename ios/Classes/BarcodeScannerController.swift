@@ -68,6 +68,9 @@ class BarcodeScannerController: UIViewController, AVCaptureMetadataOutputObjects
         case "flipCamera":
             switchCamera()
             result(nil)
+        case "closeCamera":
+            close()
+            result(nil)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -125,6 +128,16 @@ class BarcodeScannerController: UIViewController, AVCaptureMetadataOutputObjects
             // If any error occurs, simply print it out and don't continue any more.
             print(error)
             return
+        }
+    }
+
+    func close() {
+        for input in captureSession.inputs {
+            captureSession.removeInput(input)
+        }
+
+        for output in captureSession.outputs {
+            captureSession.removeOutput(output)
         }
     }
     

@@ -1,3 +1,7 @@
+## Pending
+- Bug fix : Fix Android supported version to 1.8
+- Bug fix : Define close camera channel method for iOS
+
 ## 1.0.9
 
 - Bug fix : Android camera already in use after close, preventing its use on other screens
