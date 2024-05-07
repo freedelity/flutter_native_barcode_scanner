@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'native_barcode_scanner'
-  s.version          = '1.0.9'
+  s.version          = '1.0.10'
   s.summary          = 'Barcode scanner plugin'
   s.description      = <<-DESC
 Barcode scanner plugin
