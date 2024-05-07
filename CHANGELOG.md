@@ -1,4 +1,5 @@
-## Pending
+## 1.0.10
+- Kotlin DSL for example app
 - Bug fix : Fix Android supported version to 1.8
 - Bug fix : Define close camera channel method for iOS
 
