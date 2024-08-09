@@ -381,8 +381,6 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
 
                             if (cameraParams?.get("scanner_type") == "mrz") {
 
-                                Log.i("scanner_native", "#####################################################################################################")
-
                                 val mrz: String? = MrzUtil.extractMRZ(visionText.textBlocks, mrzResult!!)
 
                                 if (mrz != null) {
@@ -421,6 +419,8 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
 
                                     if (points?.isNotEmpty() == true) {
 
+                                        Log.i("native_scanner", "Extract MRZ done with result $mrz")
+
                                         var x = points!![0].x
                                         var y = points!![0].y
                                         var width = points!![1].x - points!![0].x
@@ -456,7 +456,30 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
                                         imageProxy.image?.close()
                                         imageProxy.close()
 
+                                    } else {
+
+                                        Log.i("native_scanner", "Extract MRZ done with result $mrz but image is not loaded yet")
+
+                                        eventSink?.success(mapOf(
+                                            "progress" to 90,
+                                        ))
+
                                     }
+
+                                } else {
+
+                                    var progress = 5
+                                    if (mrzResult!!.size == 1) {
+                                        progress = 25
+                                    } else if (mrzResult!!.size == 2) {
+                                        progress = 75
+                                    }
+
+                                    Log.i("native_scanner", "Extract MRZ progress with current $mrzResult (progress $progress)")
+
+                                    eventSink?.success(mapOf(
+                                        "progress" to progress,
+                                    ))
 
                                 }
 

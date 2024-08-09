@@ -59,11 +59,13 @@ class MyDemoApp extends StatefulWidget {
 
 class _MyDemoAppState extends State<MyDemoApp> {
 
+  int? progress;
   bool withOverlay = true;
-  ScannerType scannerType = ScannerType.barcode;
+  ScannerType scannerType = ScannerType.mrz;
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
         appBar: AppBar(title: Text('Scanner ${scannerType.name} example'), actions: [
           PopupMenuButton<CameraActions>(
@@ -117,83 +119,106 @@ class _MyDemoAppState extends State<MyDemoApp> {
             ],
           ),
         ]),
-        body: Builder(builder: (builderContext) {
-          Widget child = BarcodeScannerWidget(
-            scannerType: ScannerType.mrz,
-            onBarcodeDetected: (barcode) async {
-              await showDialog(
-                  context: builderContext,
-                  builder: (dialogContext) {
-                    return Align(
-                        alignment: Alignment.center,
-                        child: Card(
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: Builder(builder: (builderContext) {
+                Widget child = BarcodeScannerWidget(
+                  scannerType: ScannerType.mrz,
+                  onBarcodeDetected: (barcode) async {
+                    await showDialog(
+                        context: builderContext,
+                        builder: (dialogContext) {
+                          return Align(
+                              alignment: Alignment.center,
+                              child: Card(
+                                  margin: const EdgeInsets.all(24),
+                                  child: Container(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Column(mainAxisSize: MainAxisSize.min, children: [Text('barcode : ${barcode.value}'), Text('format : ${barcode.format.name}'), ElevatedButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close dialog'))]))));
+                        });
+                  },
+                  onTextDetected: (String text) async {
+                    await showDialog(
+                      context: builderContext,
+                      builder: (dialogContext) {
+                        return Align(
+                          alignment: Alignment.center,
+                          child: Card(
                             margin: const EdgeInsets.all(24),
                             child: Container(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(mainAxisSize: MainAxisSize.min, children: [Text('barcode : ${barcode.value}'), Text('format : ${barcode.format.name}'), ElevatedButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close dialog'))]))));
-                  });
-            },
-            onTextDetected: (String text) async {
-              await showDialog(
-                context: builderContext,
-                builder: (dialogContext) {
-                  return Align(
-                    alignment: Alignment.center,
-                    child: Card(
-                      margin: const EdgeInsets.all(24),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('text : \n$text'),
-                            ElevatedButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close dialog')),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-            onMrzDetected: (String text, Uint8List bytes) {
-              showDialog(
-                context: builderContext,
-                builder: (dialogContext) {
-                  return Align(
-                    alignment: Alignment.center,
-                    child: Card(
-                      margin: const EdgeInsets.all(24),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(text),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              child: Image.memory(bytes),
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text('text : \n$text'),
+                                  ElevatedButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close dialog')),
+                                ],
+                              ),
                             ),
-                            ElevatedButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close dialog')),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-            onError: (dynamic error) {
-              debugPrint('$error');
-            },
-          );
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  onScanProgress: (int? progress) => setState(() => this.progress = progress),
+                  onMrzDetected: (String text, Uint8List bytes) {
+                    setState(() => progress = null);
+                    showDialog(
+                      context: builderContext,
+                      builder: (dialogContext) {
+                        return Align(
+                          alignment: Alignment.center,
+                          child: Card(
+                            margin: const EdgeInsets.all(24),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(text),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    child: Image.memory(bytes),
+                                  ),
+                                  ElevatedButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close dialog')),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  onError: (dynamic error) {
+                    debugPrint('$error');
+                  },
+                );
 
-          if (withOverlay) {
-            return buildWithOverlay(builderContext, child);
-          }
+                if (withOverlay) {
+                  return buildWithOverlay(builderContext, child);
+                }
 
-          return child;
-        }));
+                return child;
+
+              }),
+            ),
+            progress == null ? Container() : Positioned(
+              bottom: 0, left: 0, right: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                color: Colors.white,
+                child: Row(
+                  children: [
+                    const Expanded(child: LinearProgressIndicator()),
+                    const SizedBox(width: 16,),
+                    Text('$progress %'),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ));
   }
 
   buildWithOverlay(BuildContext builderContext, Widget scannerWidget) {
