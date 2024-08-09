@@ -1,4 +1,4 @@
-# native_barcode_scanner
+___# native_barcode_scanner
 
 A fast flutter plugin to scan barcodes and QR codes using the device camera. This plugin also supports text and MRZ recognition from the camera.
 
@@ -46,7 +46,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  native_barcode_scanner: ^1.0.10
+  native_barcode_scanner: ^1.0.11
 ```
 
 ## Usage
@@ -61,13 +61,27 @@ Then, create a `BarcodeScannerWidget` in your widget tree where you want to show
 
 ```dart
 @override
-  Widget build(BuildContext context) {
-    return BarcodeScannerWidget(
+Widget build(BuildContext context) {
+  return BarcodeScannerWidget(
       onBarcodeDetected: (barcode) {
         print('Barcode detected: ${barcode.value} (format: ${barcode.format.name})');
       }
+  );
+}
+```
+
+Depending on what you want to scan, change the `scannerType` which is default to `ScannerType.barcode` and use the associated callback:
+
+```dart
+@override
+  Widget build(BuildContext context) {
+    return BarcodeScannerWidget(
+        scannerType: ScannerType.mrz, 
+        onMrzDetected: (String mrz, Uint8List bytes) {
+          print('MRZ detected: $mrz');
+        } 
     );
   }
 ```
 
-If you need to manipulate the behaviour of the barcode scanning process, you may use the static methods of the `BarcodeScanner` class.
+If you need to manipulate the behaviour of the barcode scanning process, you may use the static methods of the `BarcodeScanner` class.___

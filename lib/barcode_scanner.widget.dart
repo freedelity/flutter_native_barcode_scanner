@@ -35,7 +35,7 @@ class BarcodeScannerWidget extends StatefulWidget {
   /// This function will be called when a bloc of text or a MRZ is detected.
   final Function(String textResult)? onTextDetected;
 
-  final Function(String textResult, Uint8List image)? onMrzDetected;
+  final Function(String mrz, Uint8List image)? onMrzDetected;
 
   final Function(dynamic error) onError;
 

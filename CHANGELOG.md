@@ -1,3 +1,6 @@
+## 1.0.11
+- Improve MRZ reader with text and image callback
+
 ## 1.0.10
 - Kotlin DSL for example app
 - Bug fix : Fix Android supported version to 1.8

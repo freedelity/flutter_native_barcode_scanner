@@ -28,7 +28,7 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-enum CameraActions { flipCamera, toggleFlashlight, stopScanner, startScanner, setOverlay, navigate, mrz, barcode, text }
+enum CameraActions { flipCamera, toggleFlashlight, stopScanner, startScanner, setOverlay, navigate }
 
 class _MyAppState extends State<MyApp> {
   @override
@@ -58,8 +58,9 @@ class MyDemoApp extends StatefulWidget {
 }
 
 class _MyDemoAppState extends State<MyDemoApp> {
+
   bool withOverlay = true;
-  ScannerType scannerType = ScannerType.mrz;
+  ScannerType scannerType = ScannerType.barcode;
 
   @override
   Widget build(BuildContext context) {
@@ -80,15 +81,6 @@ class _MyDemoAppState extends State<MyDemoApp> {
                 case CameraActions.startScanner:
                   BarcodeScanner.startScanner();
                   break;
-                case CameraActions.mrz:
-                  setState(() => scannerType = ScannerType.mrz);
-                  break;
-                case CameraActions.barcode:
-                  setState(() => scannerType = ScannerType.barcode);
-                  break;
-                case CameraActions.text:
-                  setState(() => scannerType = ScannerType.text);
-                  break;
                 case CameraActions.setOverlay:
                   setState(() => withOverlay = !withOverlay);
                   break;
@@ -106,10 +98,6 @@ class _MyDemoAppState extends State<MyDemoApp> {
                 value: CameraActions.stopScanner,
                 child: Text('Stop scanner'),
               ),
-              ...List.generate(ScannerType.values.length, (index) => PopupMenuItem<CameraActions>(
-                value: ScannerType.values[index] == ScannerType.mrz ? CameraActions.mrz : ScannerType.values[index] == ScannerType.text ? CameraActions.text: CameraActions.barcode,
-                child: Text('Type ${ScannerType.values[index].name}'),
-              )),
               const PopupMenuItem<CameraActions>(
                 value: CameraActions.flipCamera,
                 child: Text('Flip camera'),
@@ -131,7 +119,7 @@ class _MyDemoAppState extends State<MyDemoApp> {
         ]),
         body: Builder(builder: (builderContext) {
           Widget child = BarcodeScannerWidget(
-            scannerType: scannerType,
+            scannerType: ScannerType.mrz,
             onBarcodeDetected: (barcode) async {
               await showDialog(
                   context: builderContext,
