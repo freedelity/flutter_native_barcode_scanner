@@ -48,9 +48,13 @@ object MrzUtil {
 
             mrzLines.forEach { line ->
 
-                val text = line.text.replace("«", "<").replace(" ", "").uppercase().trim()
+                var text = line.text.replace("«", "<").replace(" ", "").uppercase().trim()
 
                 if (text.matches("^[A-Z0-9<]*$".toRegex())) {
+
+                    while (text.matches("<<<[KC]".toRegex())) {
+                        text = text.replaceFirst("<<<[KC]".toRegex(), "<<<<")
+                    }
 
                     if (((mrzResult.size < 3 && text.length == 30) || mrzResult.size < 2 && (text.length == 36 || text.length == 44))) {
 
@@ -78,8 +82,6 @@ object MrzUtil {
             val map = mutableMapOf<Int, String>()
             val missed = mutableListOf<Int>()
 
-            Log.i("native_scanner_res", "result : $mrzResult")
-
             mrzResult.forEachIndexed{ index, it ->
 
                 if (mrzResult.size == 3) {
@@ -105,8 +107,13 @@ object MrzUtil {
             }
 
             if (missed.isNotEmpty()) {
-                missed.forEach { mrzResult.removeAt(it) }
+                missed.forEach {
+                    if (it < mrzResult.size) {
+                        mrzResult.removeAt(it)
+                    }
+                }
             } else {
+
                 var result = "${map[0]}\n${map[1]}"
                 if (mrzResult.size == 3) result += "\n${map[2]}"
                 return result

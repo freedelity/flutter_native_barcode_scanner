@@ -7,6 +7,8 @@ import BarcodeFormats
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Point
 import android.graphics.Rect
 import android.hardware.camera2.CameraAccessException
 import android.util.Log
@@ -33,8 +35,10 @@ import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.runBlocking
+import java.io.ByteArrayOutputStream
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
+
 
 class BarcodeScannerController(private val activity: Activity, messenger: BinaryMessenger, methodChannelName: String, scanEventChannelName: String) : MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
 
@@ -56,6 +60,7 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
 
     private var scanSucceedTimestamp: Long = System.currentTimeMillis()
     private var mrzResult: MutableList<String>? = null
+    private var mrzBitmap: Bitmap? = null
 
     init {
         methodChannel.setMethodCallHandler(this)
@@ -192,12 +197,16 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
         var textRecognizer: TextRecognizer? = null
 
         if (cameraParams?.get("scanner_type") == "mrz" || cameraParams?.get("scanner_type") == "text") {
-            Log.i("native_scanner", "Start for MRZ scanner")
+
             textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+
             if (cameraParams?.get("scanner_type") == "mrz") {
+                Log.i("native_scanner", "Start for MRZ scanner")
                 mrzResult = mutableListOf()
             }
+
         } else {
+
             Log.i("native_scanner", "Start for barcode scanner")
             val options = BarcodeScannerOptions.Builder().setBarcodeFormats(
                 Barcode.FORMAT_CODE_39,
@@ -213,6 +222,7 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
                 Barcode.FORMAT_QR_CODE
             ).build()
             barcodeScanner = BarcodeScanning.getClient(options)
+
         }
 
         imageAnalysis.setAnalyzer(executor) { imageProxy ->
@@ -316,8 +326,9 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
                 val convertImageToBitmap = BarcodeScannerUtil.convertToBitmap(mediaImage)
                 val cropRect = Rect(0, 0, imageWidth, imageHeight)
 
-                val heightCropPercent = 60
+                val heightCropPercent = 50
                 val widthCropPercent = 1
+
                 val (widthCrop, heightCrop) = when (rotationDegrees) {
                     90, 270 -> Pair(heightCropPercent / 100f, widthCropPercent / 100f)
                     else -> Pair(widthCropPercent / 100f, heightCropPercent / 100f)
@@ -327,9 +338,10 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
                     (imageWidth * widthCrop / 2).toInt(),
                     (imageHeight * heightCrop / 2).toInt()
                 )
-                val croppedBitmap = BarcodeScannerUtil.rotateAndCrop(convertImageToBitmap, rotationDegrees, cropRect)
 
-                InputImage.fromBitmap(croppedBitmap, 0)
+                mrzBitmap = BarcodeScannerUtil.rotateAndCrop(convertImageToBitmap, rotationDegrees, cropRect)
+
+                InputImage.fromBitmap(mrzBitmap!!, 0)
             } else {
                 InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
             }
@@ -370,15 +382,105 @@ class BarcodeScannerController(private val activity: Activity, messenger: Binary
                             if (cameraParams?.get("scanner_type") == "mrz") {
 
                                 val mrz: String? = MrzUtil.extractMRZ(visionText.textBlocks, mrzResult!!)
+
                                 if (mrz != null) {
 
+                                    var points: Array<Point>? = null
+
+                                    visionText.textBlocks.forEach {
+
+                                        if (points == null) {
+
+                                            var bitmapWithoutMrz = true
+
+                                            if (it.lines.size >= 3) {
+
+                                                var countMrzCommonChar = 0
+
+                                                it.lines.forEach {  line ->
+                                                    if (line.text.contains("<<")) {
+                                                        countMrzCommonChar++
+                                                    }
+                                                }
+
+                                                if (countMrzCommonChar >= 2) {
+                                                    bitmapWithoutMrz = false
+                                                }
+
+                                            }
+
+                                            if (!bitmapWithoutMrz) {
+                                                points = it.cornerPoints
+                                            }
+
+                                        }
+
+                                    }
+
+                                    if (points?.isNotEmpty() == true) {
+
+                                        Log.i("native_scanner", "Extract MRZ done with result $mrz")
+
+                                        var x = points!![0].x
+                                        var y = points!![0].y
+                                        var width = points!![1].x - points!![0].x
+                                        var height = points!![2].y - points!![0].y
+
+                                        if (width > mrzBitmap!!.width) {
+                                            x = 0
+                                            width = mrzBitmap!!.width
+                                        }
+                                        if (height > mrzBitmap!!.height) {
+                                            y = 0
+                                            height = mrzBitmap!!.height
+                                        }
+
+                                        val croppedBitmap = Bitmap.createBitmap(
+                                            mrzBitmap!!,
+                                            x,
+                                            y,
+                                            width,
+                                            height,
+                                        )
+
+                                        val stream = ByteArrayOutputStream()
+                                        croppedBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                                        val mrzByteArray = stream.toByteArray()
+
+                                        eventSink?.success(mapOf(
+                                            "mrz" to mrz,
+                                            "img" to mrzByteArray,
+                                        ))
+
+                                        mrzResult!!.clear()
+                                        imageProxy.image?.close()
+                                        imageProxy.close()
+
+                                    } else {
+
+                                        Log.i("native_scanner", "Extract MRZ done with result $mrz but image is not loaded yet")
+
+                                        eventSink?.success(mapOf(
+                                            "progress" to 90,
+                                        ))
+
+                                    }
+
+                                } else {
+
+                                    var progress = 5
+                                    if (mrzResult!!.size == 1) {
+                                        progress = 25
+                                    } else if (mrzResult!!.size == 2) {
+                                        progress = 75
+                                    }
+
+                                    Log.i("native_scanner", "Extract MRZ progress with current $mrzResult (progress $progress)")
+
                                     eventSink?.success(mapOf(
-                                        "mrz" to mrz,
+                                        "progress" to progress,
                                     ))
 
-                                    mrzResult!!.clear()
-                                    imageProxy.image?.close()
-                                    imageProxy.close()
                                 }
 
                             } else {
