@@ -35,10 +35,21 @@ class BarcodeScannerWidget extends StatefulWidget {
   /// This function will be called when a bloc of text or a MRZ is detected.
   final Function(String textResult)? onTextDetected;
 
+  final Function(String textResult, Uint8List image)? onMrzDetected;
+
   final Function(dynamic error) onError;
 
   const BarcodeScannerWidget(
-      {Key? key, this.cameraSelector = CameraSelector.back, this.startScanning = true, this.stopScanOnBarcodeDetected = true, this.orientation = CameraOrientation.portrait, this.scannerType = ScannerType.barcode, this.onBarcodeDetected, this.onTextDetected, required this.onError})
+      {Key? key, this.cameraSelector = CameraSelector.back,
+        this.startScanning = true,
+        this.stopScanOnBarcodeDetected = true,
+        this.orientation = CameraOrientation.portrait,
+        this.scannerType = ScannerType.barcode,
+        this.onBarcodeDetected,
+        this.onTextDetected,
+        this.onMrzDetected,
+        required this.onError,
+      })
       : assert(onBarcodeDetected != null || onTextDetected != null),
         super(key: key);
 
@@ -67,7 +78,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
     eventSubscription = eventChannel.receiveBroadcastStream().listen((dynamic event) async {
       if (widget.onBarcodeDetected != null && widget.scannerType == ScannerType.barcode) {
         final format = BarcodeFormat.unserialize(event['format']);
-        if (format != null) {
+        if (format != null && event['barcode'] != null) {
           await BarcodeScanner.stopScanner();
 
           await widget.onBarcodeDetected!(Barcode(format: format, value: event['barcode'] as String));
@@ -75,13 +86,20 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
           if (!widget.stopScanOnBarcodeDetected) {
             BarcodeScanner.startScanner();
           }
-        }
-      } else if (widget.onTextDetected != null && widget.scannerType != ScannerType.barcode) {
-        if (widget.scannerType == ScannerType.mrz) {
-          await BarcodeScanner.stopScanner();
-          await widget.onTextDetected!(event['mrz'] as String);
         } else {
+          widget.onError(const FormatException('Barcode not found'));
+        }
+      } else if (widget.onTextDetected != null && widget.scannerType == ScannerType.text) {
+        if (event['text'] != null) {
           await widget.onTextDetected!(event['text'] as String);
+        } else {
+          widget.onError(const FormatException('Text not found'));
+        }
+      } else if (widget.onMrzDetected != null && widget.scannerType == ScannerType.mrz) {
+        if (event['mrz'] != null && event["img"] != null) {
+          await widget.onMrzDetected!(event['mrz'] as String, Uint8List.fromList(event["img"]));
+        } else {
+          widget.onError(const FormatException('MRZ not found'));
         }
       }
     }, onError: (dynamic error) {

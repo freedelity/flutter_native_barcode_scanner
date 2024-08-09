@@ -3,9 +3,11 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:native_barcode_scanner/barcode_scanner.dart';
 
 void main() async {
@@ -26,7 +28,7 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-enum CameraActions { flipCamera, toggleFlashlight, stopScanner, startScanner, setOverlay, navigate }
+enum CameraActions { flipCamera, toggleFlashlight, stopScanner, startScanner, setOverlay, navigate, mrz, barcode, text }
 
 class _MyAppState extends State<MyApp> {
   @override
@@ -42,23 +44,27 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(home: Builder(builder: (builderContext) {
-      return MyDemoApp();
+      return const MyDemoApp();
     }));
   }
 }
 
 class MyDemoApp extends StatefulWidget {
+
+  const MyDemoApp({super.key});
+
   @override
   State<StatefulWidget> createState() => _MyDemoAppState();
 }
 
 class _MyDemoAppState extends State<MyDemoApp> {
   bool withOverlay = true;
+  ScannerType scannerType = ScannerType.mrz;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: const Text('Scanner plugin example app'), actions: [
+        appBar: AppBar(title: Text('Scanner ${scannerType.name} example'), actions: [
           PopupMenuButton<CameraActions>(
             onSelected: (CameraActions result) {
               switch (result) {
@@ -74,6 +80,15 @@ class _MyDemoAppState extends State<MyDemoApp> {
                 case CameraActions.startScanner:
                   BarcodeScanner.startScanner();
                   break;
+                case CameraActions.mrz:
+                  setState(() => scannerType = ScannerType.mrz);
+                  break;
+                case CameraActions.barcode:
+                  setState(() => scannerType = ScannerType.barcode);
+                  break;
+                case CameraActions.text:
+                  setState(() => scannerType = ScannerType.text);
+                  break;
                 case CameraActions.setOverlay:
                   setState(() => withOverlay = !withOverlay);
                   break;
@@ -84,20 +99,24 @@ class _MyDemoAppState extends State<MyDemoApp> {
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<CameraActions>>[
               const PopupMenuItem<CameraActions>(
+                value: CameraActions.startScanner,
+                child: Text('Start scanner'),
+              ),
+              const PopupMenuItem<CameraActions>(
+                value: CameraActions.stopScanner,
+                child: Text('Stop scanner'),
+              ),
+              ...List.generate(ScannerType.values.length, (index) => PopupMenuItem<CameraActions>(
+                value: ScannerType.values[index] == ScannerType.mrz ? CameraActions.mrz : ScannerType.values[index] == ScannerType.text ? CameraActions.text: CameraActions.barcode,
+                child: Text('Type ${ScannerType.values[index].name}'),
+              )),
+              const PopupMenuItem<CameraActions>(
                 value: CameraActions.flipCamera,
                 child: Text('Flip camera'),
               ),
               const PopupMenuItem<CameraActions>(
                 value: CameraActions.toggleFlashlight,
                 child: Text('Toggle flashlight'),
-              ),
-              const PopupMenuItem<CameraActions>(
-                value: CameraActions.stopScanner,
-                child: Text('Stop scanner'),
-              ),
-              const PopupMenuItem<CameraActions>(
-                value: CameraActions.startScanner,
-                child: Text('Start scanner'),
               ),
               PopupMenuItem<CameraActions>(
                 value: CameraActions.setOverlay,
@@ -112,7 +131,7 @@ class _MyDemoAppState extends State<MyDemoApp> {
         ]),
         body: Builder(builder: (builderContext) {
           Widget child = BarcodeScannerWidget(
-            scannerType: ScannerType.barcode,
+            scannerType: scannerType,
             onBarcodeDetected: (barcode) async {
               await showDialog(
                   context: builderContext,
@@ -128,13 +147,53 @@ class _MyDemoAppState extends State<MyDemoApp> {
             },
             onTextDetected: (String text) async {
               await showDialog(
-                  context: builderContext,
-                  builder: (dialogContext) {
-                    return Align(
-                        alignment: Alignment.center,
-                        child: Card(
-                            margin: const EdgeInsets.all(24), child: Container(padding: const EdgeInsets.all(16), child: Column(mainAxisSize: MainAxisSize.min, children: [Text('text : \n$text'), ElevatedButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close dialog'))]))));
-                  });
+                context: builderContext,
+                builder: (dialogContext) {
+                  return Align(
+                    alignment: Alignment.center,
+                    child: Card(
+                      margin: const EdgeInsets.all(24),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('text : \n$text'),
+                            ElevatedButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close dialog')),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+            onMrzDetected: (String text, Uint8List bytes) {
+              showDialog(
+                context: builderContext,
+                builder: (dialogContext) {
+                  return Align(
+                    alignment: Alignment.center,
+                    child: Card(
+                      margin: const EdgeInsets.all(24),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(text),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: Image.memory(bytes),
+                            ),
+                            ElevatedButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close dialog')),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
             },
             onError: (dynamic error) {
               debugPrint('$error');
@@ -158,7 +217,7 @@ class _MyDemoAppState extends State<MyDemoApp> {
           top: 16,
           right: 16,
           child: ElevatedButton(
-              style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.purple), foregroundColor: MaterialStateProperty.all(Colors.white), shape: MaterialStateProperty.all(const CircleBorder()), padding: MaterialStateProperty.all(const EdgeInsets.all(8))),
+              style: const ButtonStyle(backgroundColor: WidgetStatePropertyAll(Colors.purple), foregroundColor: WidgetStatePropertyAll(Colors.white), shape: WidgetStatePropertyAll(CircleBorder()), padding: WidgetStatePropertyAll(EdgeInsets.all(8))),
               onPressed: () {
                 ScaffoldMessenger.of(builderContext).showSnackBar(const SnackBar(content: Text('Icon button pressed')));
               },
@@ -182,7 +241,7 @@ class _MyDemoAppState extends State<MyDemoApp> {
               const Text('Press back button'),
               ElevatedButton(
                   onPressed: () {
-                    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => MyDemoApp()));
+                    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const MyDemoApp()));
                   },
                   child: const Text('Back'))
             ],

@@ -105,7 +105,11 @@ object MrzUtil {
             }
 
             if (missed.isNotEmpty()) {
-                missed.forEach { mrzResult.removeAt(it) }
+                missed.forEach {
+                    if (it < mrzResult.size) {
+                        mrzResult.removeAt(it)
+                    }
+                }
             } else {
                 var result = "${map[0]}\n${map[1]}"
                 if (mrzResult.size == 3) result += "\n${map[2]}"
